@@ -102,8 +102,20 @@ class AnalysisResult {
   final String sessionName;     // 'London/NY', 'London', 'New York', 'Tokyo', 'Sydney', 'London Lunch'
   final String sessionWarning;  // '' = good session; non-empty = warning text
   final String summary;         // عصارة التحليل — concise verdict
-  final String candlePattern;   // 'BullishPinBar', 'BearishPinBar', 'BullishEngulfing', 'BearishEngulfing', ''
+  final String candlePattern;   // 'BullishPinBar', 'BearishPinBar', 'BullishEngulfing', 'BearishEngulfing', 'Doji', ''
   final double atrValue;        // ATR(14) absolute value
+
+  // ── Deep Analysis ─────────────────────────────────────────────────────────
+  final double bbUpper;             // Bollinger Band upper (20-period, 2σ)
+  final double bbMiddle;            // Bollinger Band middle (SMA-20)
+  final double bbLower;             // Bollinger Band lower
+  final bool rsiBullishDivergence;  // price lower-low but RSI higher-low
+  final bool rsiBearishDivergence;  // price higher-high but RSI lower-high
+  final String smcOrderBlock;       // e.g. 'Bullish OB @ 1.0850–1.0855'
+  final String smcFvg;              // e.g. 'Bullish FVG 1.0820–1.0830'
+  final String smcBos;              // e.g. 'BOS ↑ (Bullish Break)'
+  final String smcLiqSweep;         // e.g. 'Bullish Sweep @ 1.0800'
+  final String tradeNote;           // AI-generated or rule-based trade management note
 
   const AnalysisResult({
     required this.signal,
@@ -130,5 +142,15 @@ class AnalysisResult {
     this.summary = '',
     this.candlePattern = '',
     this.atrValue = 0.0,
+    this.bbUpper = 0.0,
+    this.bbMiddle = 0.0,
+    this.bbLower = 0.0,
+    this.rsiBullishDivergence = false,
+    this.rsiBearishDivergence = false,
+    this.smcOrderBlock = '',
+    this.smcFvg = '',
+    this.smcBos = '',
+    this.smcLiqSweep = '',
+    this.tradeNote = '',
   });
 }

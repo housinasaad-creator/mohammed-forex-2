@@ -68,6 +68,8 @@ class _AnalysisResultCardState extends State<AnalysisResultCard>
             const SizedBox(height: 14),
             _buildPriceLevels(),
             const SizedBox(height: 14),
+            _buildDeepAnalysisPanel(),
+            const SizedBox(height: 14),
             _buildConfluence(),
             const SizedBox(height: 14),
             _buildClaudeBox(),
@@ -308,6 +310,173 @@ class _AnalysisResultCardState extends State<AnalysisResultCard>
               ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+
+  // ── Deep Analysis Panel (SMC + BB + Divergence) ───────────────────────────
+
+  Widget _buildDeepAnalysisPanel() {
+    final r = widget.result;
+    final isBuy = r.signal == SignalType.buy;
+
+    // BB position
+    final bbRange = r.bbUpper - r.bbLower;
+    final bbPos   = bbRange > 0 ? (r.entryPoint - r.bbLower) / bbRange : 0.5;
+    final bbLabel = bbPos < 0.12 ? _s.t(ar: 'عند النطاق السفلي ↔ فرصة', en: 'Near Lower Band ↔ Opportunity', tr: 'Alt Bant Yakını ↔ Fırsat')
+                  : bbPos > 0.88 ? _s.t(ar: 'عند النطاق العلوي ↔ تحذير', en: 'Near Upper Band ↔ Caution', tr: 'Üst Bant Yakını ↔ Dikkat')
+                  : _s.t(ar: 'في منتصف النطاق', en: 'Near Midline', tr: 'Orta Çizgi Yakını');
+    final bbColor = bbPos < 0.12 ? AppColors.neonGreen
+                  : bbPos > 0.88 ? AppColors.neonRed
+                  : AppColors.textMuted;
+
+    final rows = <_DeepRow>[];
+
+    // SMC rows
+    if (r.smcBos.isNotEmpty) {
+      final isBull = r.smcBos.contains('↑');
+      rows.add(_DeepRow(
+        label: 'BOS/CHoCH',
+        value: r.smcBos,
+        color: isBull ? AppColors.neonGreen : AppColors.neonRed,
+        icon: isBull ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+      ));
+    }
+    if (r.smcOrderBlock.isNotEmpty) {
+      final isBullOb = r.smcOrderBlock.contains('Bullish');
+      rows.add(_DeepRow(
+        label: 'Order Block',
+        value: r.smcOrderBlock,
+        color: isBullOb ? AppColors.neonGreen : AppColors.neonRed,
+        icon: Icons.crop_square_rounded,
+      ));
+    }
+    if (r.smcLiqSweep.isNotEmpty) {
+      final isBullSweep = r.smcLiqSweep.contains('Bullish');
+      rows.add(_DeepRow(
+        label: _s.t(ar: 'اصطياد سيولة', en: 'Liquidity Sweep', tr: 'Likidite Süpürmesi'),
+        value: r.smcLiqSweep,
+        color: isBullSweep ? AppColors.neonGreen : AppColors.neonRed,
+        icon: Icons.waves_rounded,
+      ));
+    }
+    if (r.smcFvg.isNotEmpty) {
+      final isBullFvg = r.smcFvg.contains('Bullish');
+      rows.add(_DeepRow(
+        label: 'FVG',
+        value: r.smcFvg,
+        color: isBullFvg ? AppColors.neonGreen.withOpacity(0.8) : AppColors.neonRed.withOpacity(0.8),
+        icon: Icons.space_bar_rounded,
+      ));
+    }
+
+    // Bollinger row (only if we have real BB data)
+    if (r.bbUpper > 0) {
+      rows.add(_DeepRow(
+        label: 'Bollinger Bands',
+        value: bbLabel,
+        color: bbColor,
+        icon: Icons.show_chart_rounded,
+      ));
+    }
+
+    // RSI Divergence
+    if (r.rsiBullishDivergence) {
+      rows.add(_DeepRow(
+        label: _s.t(ar: 'انحراف RSI', en: 'RSI Divergence', tr: 'RSI Uyumsuzluğu'),
+        value: _s.t(ar: 'انحراف صاعد ✓ — السعر أدنى، RSI أعلى', en: 'Bullish Div. ✓ — Price lower, RSI higher', tr: 'Yükseliş Div. ✓ — Fiyat altta, RSI yukarıda'),
+        color: AppColors.neonGreen,
+        icon: Icons.show_chart_rounded,
+      ));
+    } else if (r.rsiBearishDivergence) {
+      rows.add(_DeepRow(
+        label: _s.t(ar: 'انحراف RSI', en: 'RSI Divergence', tr: 'RSI Uyumsuzluğu'),
+        value: _s.t(ar: 'انحراف هابط ✓ — السعر أعلى، RSI أدنى', en: 'Bearish Div. ✓ — Price higher, RSI lower', tr: 'Düşüş Div. ✓ — Fiyat yukarıda, RSI altta'),
+        color: AppColors.neonRed,
+        icon: Icons.show_chart_rounded,
+      ));
+    }
+
+    if (rows.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _sectionTitle(
+                _s.t(ar: 'التحليل المعمّق', en: 'DEEP ANALYSIS', tr: 'DERİN ANALİZ'),
+                Icons.hub_rounded,
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: AppColors.gold.withOpacity(0.25)),
+                ),
+                child: Text(
+                  'SMC + BB + DIV',
+                  style: GoogleFonts.inter(
+                    fontSize: 8,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.gold,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...rows.map((row) => Padding(
+            padding: const EdgeInsets.only(bottom: 9),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: row.color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(5),
+                    border: Border.all(color: row.color.withOpacity(0.3), width: 0.8),
+                  ),
+                  child: Icon(row.icon, size: 11, color: row.color),
+                ),
+                const SizedBox(width: 10),
+                SizedBox(
+                  width: 100,
+                  child: Text(
+                    row.label,
+                    style: GoogleFonts.inter(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    row.value,
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: row.color,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )),
         ],
       ),
     );
@@ -585,6 +754,21 @@ class _PatternChip extends StatelessWidget {
       ),
     );
   }
+}
+
+// ── Deep Row data class ────────────────────────────────────────────────────────
+
+class _DeepRow {
+  const _DeepRow({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.icon,
+  });
+  final String  label;
+  final String  value;
+  final Color   color;
+  final IconData icon;
 }
 
 // ── Price Level chip ───────────────────────────────────────────────────────────

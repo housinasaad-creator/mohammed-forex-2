@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/locale_provider.dart';
+import '../providers/dashboard_provider.dart';
 import '../widgets/sidebar_widget.dart';
 import '../widgets/header_widget.dart';
 import '../widgets/technical_gauges_widget.dart';
@@ -39,6 +40,7 @@ class DashboardScreen extends StatelessWidget {
                                 height: 340,
                                 child: CandlestickChartWidget(),
                               ),
+                              const _TradeNoteBanner(),
                               IntrinsicHeight(
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -64,6 +66,52 @@ class DashboardScreen extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Trade Note Banner ──────────────────────────────────────────────────────────
+
+class _TradeNoteBanner extends StatelessWidget {
+  const _TradeNoteBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<DashboardProvider>();
+    final note = provider.result?.tradeNote ?? '';
+    if (note.isEmpty) return const SizedBox.shrink();
+
+    final isWait   = note.startsWith('⏸');
+    final color    = isWait ? AppColors.waitAmber : AppColors.gold;
+    final icon     = isWait ? Icons.pause_circle_outline_rounded : Icons.timer_outlined;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.06),
+        border: Border(
+          bottom: BorderSide(color: color.withOpacity(0.25), width: 1),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              note,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: color.withOpacity(0.9),
+                height: 1.55,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
         ],
       ),
