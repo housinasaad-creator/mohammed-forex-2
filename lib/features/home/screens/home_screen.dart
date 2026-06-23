@@ -992,12 +992,6 @@ class _MarketTickerStripState extends State<_MarketTickerStrip> {
       _up[s]      = true;
     }
     _marketClosed = _isMarketClosed();
-    // Always fetch historical sparklines (even on weekends shows last week)
-    _fetchSparklines();
-    if (!_marketClosed) {
-      _fetchLive();
-      _liveTimer = Timer.periodic(const Duration(seconds: 30), (_) => _fetchLive());
-    }
   }
 
   Future<void> _fetchSparklines() async {

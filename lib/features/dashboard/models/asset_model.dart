@@ -12,7 +12,7 @@ enum AssetCategory {
   commodities,
 }
 
-enum Timeframe { m5, m15, m30 }
+enum Timeframe { m1, m5, m15, m30 }
 
 // ── Extensions ────────────────────────────────────────────────────────────────
 
@@ -54,6 +54,7 @@ extension AssetCategoryExtension on AssetCategory {
 extension TimeframeExtension on Timeframe {
   String get label {
     switch (this) {
+      case Timeframe.m1:  return 'M1';
       case Timeframe.m5:  return 'M5';
       case Timeframe.m15: return 'M15';
       case Timeframe.m30: return 'M30';
@@ -62,6 +63,7 @@ extension TimeframeExtension on Timeframe {
 
   String get description {
     switch (this) {
+      case Timeframe.m1:  return '1 Minute';
       case Timeframe.m5:  return '5 Minutes';
       case Timeframe.m15: return '15 Minutes';
       case Timeframe.m30: return '30 Minutes';

@@ -112,6 +112,7 @@ class _TfBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final label = switch (tf) {
+      Timeframe.m1  => 'M1',
       Timeframe.m5  => 'M5',
       Timeframe.m15 => 'M15',
       Timeframe.m30 => 'M30',

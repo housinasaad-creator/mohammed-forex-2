@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="/mohammed-forex/">
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="mohammed forex — Advanced Forex & Commodities Analysis Dashboard. Multi-timeframe scalping intelligence with AI-powered signals.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="mohammed forex">
+  <meta name="theme-color" content="#090910">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <title>mohammed forex — Scalping Intelligence</title>
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background-color: #090910;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      overflow: hidden;
+    }
+
+    #splash {
+      position: fixed;
+      inset: 0;
+      background: #090910;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+    }
+
+    #splash.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    /* Ambient glow */
+    #splash::before {
+      content: '';
+      position: absolute;
+      top: -150px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(212,175,55,0.06) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .logo-ring {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #FFD700, #D4AF37, #9A7B20);
+      box-shadow: 0 0 30px rgba(212,175,55,0.45), 0 0 60px rgba(212,175,55,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      animation: logoFloat 3s ease-in-out infinite;
+    }
+
+    .logo-ring span {
+      color: #090910;
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: -1px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .brand-primary {
+      color: #D4AF37;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+    }
+
+    .brand-secondary {
+      color: #555570;
+      font-size: 24px;
+      font-weight: 300;
+      letter-spacing: 3px;
+    }
+
+    .tagline {
+      color: #555570;
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 48px;
+    }
+
+    /* Progress bar */
+    .progress-track {
+      width: 220px;
+      height: 2px;
+      background: #1A1A28;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #D4AF37, #FFD700);
+      border-radius: 2px;
+      width: 0%;
+      animation: progressLoad 2.5s ease-in-out forwards;
+      box-shadow: 0 0 8px rgba(212,175,55,0.6);
+    }
+
+    .loading-text {
+      color: #555570;
+      font-size: 11px;
+      letter-spacing: 1px;
+      animation: fadePulse 1.5s ease-in-out infinite;
+    }
+
+    /* Bottom badge */
+    .badge {
+      position: absolute;
+      bottom: 28px;
+      color: #333344;
+      font-size: 10px;
+      letter-spacing: 0.8px;
+    }
+
+    @keyframes logoFloat {
+      0%, 100% { transform: translateY(0px); }
+      50%       { transform: translateY(-6px); }
+    }
+
+    @keyframes progressLoad {
+      0%   { width: 0%; }
+      30%  { width: 35%; }
+      60%  { width: 70%; }
+      85%  { width: 88%; }
+      100% { width: 100%; }
+    }
+
+    @keyframes fadePulse {
+      0%, 100% { opacity: 0.4; }
+      50%       { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Branded splash screen -->
+  <div id="splash">
+    <div class="logo-ring"><span>MF</span></div>
+    <div class="brand">
+      <span class="brand-primary">mohammed</span>
+      <span class="brand-secondary">forex</span>
+    </div>
+    <p class="tagline">Scalping Intelligence · AI-Powered</p>
+    <div class="progress-track">
+      <div class="progress-fill"></div>
+    </div>
+    <p class="loading-text">Initialising dashboard...</p>
+    <p class="badge">Portfolio Build · v1.0.0 · Multi-Timeframe Confluence Engine</p>
+  </div>
+
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      const splash = document.getElementById('splash');
+      if (splash) {
+        splash.classList.add('hidden');
+        setTimeout(() => splash.remove(), 700);
+      }
+    });
+  </script>
+
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
