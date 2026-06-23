@@ -452,9 +452,10 @@ class _AnalysisResultCardState extends State<AnalysisResultCard>
                   ),
                   child: Icon(row.icon, size: 11, color: row.color),
                 ),
-                const SizedBox(width: 10),
-                SizedBox(
-                  width: 100,
+                const SizedBox(width: 8),
+                // Label adapts to narrow screens
+                Flexible(
+                  flex: 2,
                   child: Text(
                     row.label,
                     style: GoogleFonts.inter(
@@ -464,7 +465,9 @@ class _AnalysisResultCardState extends State<AnalysisResultCard>
                     ),
                   ),
                 ),
-                Expanded(
+                const SizedBox(width: 8),
+                Flexible(
+                  flex: 3,
                   child: Text(
                     row.value,
                     style: GoogleFonts.inter(

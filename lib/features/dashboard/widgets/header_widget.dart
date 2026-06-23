@@ -56,12 +56,27 @@ class _HeaderWidgetState extends State<HeaderWidget>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Row 1: compact — back | spacer | pair+dot | lang
+            // Row 1: menu | back | spacer | pair+dot | lang
             Container(
               height: 48,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Row(
                 children: [
+                  // Hamburger — opens sidebar drawer
+                  Builder(builder: (ctx) => GestureDetector(
+                    onTap: () => Scaffold.of(ctx).openDrawer(),
+                    child: Container(
+                      width: 36, height: 36,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: const Icon(Icons.menu_rounded,
+                          size: 18, color: AppColors.textSecondary),
+                    ),
+                  )),
+                  const SizedBox(width: 8),
                   if (widget.showBackButton) ...[
                     _BackHomeButton(label: s.backHome),
                     const SizedBox(width: 8),

@@ -16,15 +16,27 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 768;
+    final chartH   = isMobile ? 240.0 : 340.0;
+
     return Scaffold(
       backgroundColor: AppColors.background,
+      // Sidebar slides in as a drawer on mobile
+      drawer: isMobile
+          ? Drawer(
+              width: 262,
+              backgroundColor: AppColors.sidebarBg,
+              child: const SidebarWidget(),
+            )
+          : null,
       body: Stack(
         children: [
           const _AmbientGlow(),
           Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SidebarWidget(),
+              // Sidebar — desktop only (mobile uses drawer)
+              if (!isMobile) const SidebarWidget(),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -32,32 +44,39 @@ class DashboardScreen extends StatelessWidget {
                     HeaderWidget(showBackButton: showBackButton),
                     Expanded(
                       child: SingleChildScrollView(
-                        child: IntrinsicHeight(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              const SizedBox(
-                                height: 340,
-                                child: CandlestickChartWidget(),
-                              ),
-                              const _TradeNoteBanner(),
-                              IntrinsicHeight(
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: [
-                                    const Flexible(
-                                      flex: 4,
-                                      child: TechnicalGaugesWidget(scrollable: false),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            SizedBox(
+                              height: chartH,
+                              child: const CandlestickChartWidget(),
+                            ),
+                            const _TradeNoteBanner(),
+                            // Gauges + Chamber: side-by-side on desktop, stacked on mobile
+                            isMobile
+                                ? const Column(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [
+                                      TechnicalGaugesWidget(scrollable: false),
+                                      AiExecutionChamberWidget(scrollable: false),
+                                    ],
+                                  )
+                                : const IntrinsicHeight(
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                                      children: [
+                                        Flexible(
+                                          flex: 4,
+                                          child: TechnicalGaugesWidget(scrollable: false),
+                                        ),
+                                        Flexible(
+                                          flex: 6,
+                                          child: AiExecutionChamberWidget(scrollable: false),
+                                        ),
+                                      ],
                                     ),
-                                    const Flexible(
-                                      flex: 6,
-                                      child: AiExecutionChamberWidget(scrollable: false),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+                                  ),
+                          ],
                         ),
                       ),
                     ),
