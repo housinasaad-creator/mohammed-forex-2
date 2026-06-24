@@ -49,7 +49,19 @@ class DashboardScreen extends StatelessWidget {
                           children: [
                             SizedBox(
                               height: chartH,
-                              child: const CandlestickChartWidget(),
+                              child: Stack(
+                                children: [
+                                  const CandlestickChartWidget(),
+                                  // Floating analyze button — mobile only
+                                  if (isMobile)
+                                    const Positioned(
+                                      bottom: 14,
+                                      left: 0,
+                                      right: 0,
+                                      child: Center(child: _MobileAnalyzeButton()),
+                                    ),
+                                ],
+                              ),
                             ),
                             const _TradeNoteBanner(),
                             // Gauges + Chamber: side-by-side on desktop, stacked on mobile
@@ -87,6 +99,85 @@ class DashboardScreen extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Mobile Floating Analyze Button ────────────────────────────────────────────
+
+class _MobileAnalyzeButton extends StatelessWidget {
+  const _MobileAnalyzeButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<DashboardProvider>();
+    final lp      = context.watch<LocaleProvider>();
+    final s       = lp.s;
+
+    if (provider.isLoading) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.sidebarBg.withOpacity(0.93),
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: AppColors.gold.withOpacity(0.5), width: 1.5),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(
+              width: 14, height: 14,
+              child: CircularProgressIndicator(
+                strokeWidth: 1.8,
+                color: AppColors.gold,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              s.analysingLabel,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.gold,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return GestureDetector(
+      onTap: () => provider.runAnalysis(lang: lp.lang),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 13),
+        decoration: BoxDecoration(
+          color: AppColors.gold,
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.gold.withOpacity(0.45),
+              blurRadius: 20,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.bolt_rounded, color: AppColors.background, size: 18),
+            const SizedBox(width: 7),
+            Text(
+              s.analyzeNowBtn,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: AppColors.background,
+                letterSpacing: 0.4,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
