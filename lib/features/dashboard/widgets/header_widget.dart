@@ -82,48 +82,42 @@ class _HeaderWidgetState extends State<HeaderWidget>
                     const SizedBox(width: 8),
                   ],
                   const Spacer(),
-                  // Active pair compact — tap to open asset picker
-                  GestureDetector(
-                    onTap: () => _showAssetPicker(context, provider),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(7),
-                        border: Border.all(color: AppColors.borderGold, width: 1),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AnimatedBuilder(
-                            animation: _pulseAnim,
-                            builder: (_, __) => Container(
-                              width: 7, height: 7,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: dotColor,
-                                boxShadow: connected ? [BoxShadow(
-                                  color: dotColor.withOpacity(_pulseAnim.value * 0.6),
-                                  blurRadius: 5, spreadRadius: 1,
-                                )] : [],
-                              ),
+                  // Locked to a single pair — static, not a picker trigger.
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(7),
+                      border: Border.all(color: AppColors.borderGold, width: 1),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        AnimatedBuilder(
+                          animation: _pulseAnim,
+                          builder: (_, __) => Container(
+                            width: 7, height: 7,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: dotColor,
+                              boxShadow: connected ? [BoxShadow(
+                                color: dotColor.withOpacity(_pulseAnim.value * 0.6),
+                                blurRadius: 5, spreadRadius: 1,
+                              )] : [],
                             ),
                           ),
-                          const SizedBox(width: 7),
-                          Text(
-                            provider.selectedAsset.symbol,
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.gold,
-                              letterSpacing: 0.5,
-                            ),
+                        ),
+                        const SizedBox(width: 7),
+                        Text(
+                          provider.selectedAsset.symbol,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.gold,
+                            letterSpacing: 0.5,
                           ),
-                          const SizedBox(width: 5),
-                          const Icon(Icons.keyboard_arrow_down_rounded,
-                              size: 14, color: AppColors.gold),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -317,14 +311,6 @@ class _HeaderWidgetState extends State<HeaderWidget>
     );
   }
 
-  void _showAssetPicker(BuildContext context, DashboardProvider provider) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _MobileAssetSheet(provider: provider),
-    );
-  }
 }
 
 // ── Language Switcher ──────────────────────────────────────────────────────────
@@ -442,186 +428,6 @@ class _BackHomeButtonState extends State<_BackHomeButton> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-// ── Mobile Asset Picker Sheet ──────────────────────────────────────────────────
-
-class _MobileAssetSheet extends StatefulWidget {
-  const _MobileAssetSheet({required this.provider});
-  final DashboardProvider provider;
-
-  @override
-  State<_MobileAssetSheet> createState() => _MobileAssetSheetState();
-}
-
-class _MobileAssetSheetState extends State<_MobileAssetSheet> {
-  final Set<AssetCategory> _expanded = {AssetCategory.forexMajor};
-
-  static const _categories = [
-    (AssetCategory.forexMajor,  AssetCatalogue.forexMajor),
-    (AssetCategory.forexMinor,  AssetCatalogue.forexMinor),
-    (AssetCategory.forexExotic, AssetCatalogue.forexExotic),
-    (AssetCategory.metals,      AssetCatalogue.metals),
-    (AssetCategory.energy,      AssetCatalogue.energy),
-    (AssetCategory.commodities, AssetCatalogue.commodities),
-  ];
-
-
-  @override
-  Widget build(BuildContext context) {
-    final s = context.watch<LocaleProvider>().s;
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.75,
-      decoration: const BoxDecoration(
-        color: AppColors.sidebarBg,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        border: Border(top: BorderSide(color: AppColors.border, width: 1)),
-      ),
-      child: Column(
-        children: [
-          // Handle
-          Container(
-            margin: const EdgeInsets.only(top: 10),
-            width: 36,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.border,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          // Title
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-            child: Row(
-              children: [
-                Text(
-                  s.selectAssetHint,
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const Spacer(),
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: const Icon(Icons.close_rounded,
-                      size: 20, color: AppColors.textMuted),
-                ),
-              ],
-            ),
-          ),
-          const Divider(color: AppColors.border, height: 1),
-          // Asset list
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Column(
-                children: _categories.map((entry) {
-                  final cat = entry.$1;
-                  final assets = entry.$2;
-                  final isOpen = _expanded.contains(cat);
-                  return Column(
-                    children: [
-                      // Category header
-                      GestureDetector(
-                        onTap: () => setState(() {
-                          if (isOpen) _expanded.remove(cat);
-                          else _expanded.add(cat);
-                        }),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
-                          color: Colors.transparent,
-                          child: Row(
-                            children: [
-                              Text(
-                                s.categoryLabel(cat),
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textMuted,
-                                  letterSpacing: 0.8,
-                                ),
-                              ),
-                              const Spacer(),
-                              Icon(
-                                isOpen
-                                    ? Icons.keyboard_arrow_up_rounded
-                                    : Icons.keyboard_arrow_down_rounded,
-                                size: 16,
-                                color: AppColors.textMuted,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      if (isOpen)
-                        ...assets.map((asset) {
-                          final isSelected =
-                              widget.provider.selectedAsset.symbol == asset.symbol;
-                          return GestureDetector(
-                            onTap: () {
-                              widget.provider.selectAsset(asset);
-                              Navigator.pop(context);
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 2),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? AppColors.gold.withOpacity(0.1)
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? AppColors.gold.withOpacity(0.4)
-                                      : Colors.transparent,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: asset.logoColor,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    asset.symbol,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      color: isSelected
-                                          ? AppColors.gold
-                                          : AppColors.textPrimary,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  if (isSelected) ...[
-                                    const Spacer(),
-                                    const Icon(Icons.check_rounded,
-                                        size: 14, color: AppColors.gold),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          );
-                        }),
-                    ],
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

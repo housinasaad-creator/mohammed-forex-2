@@ -156,36 +156,41 @@ async function decisionMakerAgent(
   vision: Record<string, unknown>,
   technical: Record<string, unknown>,
   news: Record<string, unknown>,
+  m1: { bias: string; note: string },
 ) {
-  const system = `You are the senior trading desk decision-maker. You receive three independent reports — chart vision, technical indicators, and news risk — and must issue ONE final trade decision.
+  const system = `You are the senior trading desk decision-maker. You receive independent reports — chart vision, technical indicators, M1 short-term structure, and news risk — and must issue ONE final trade decision.
 ${NO_AI_RULE}
-Trading style constraint: trades on this desk target a 30-minute timeframe, with an EXPECTED HOLD TIME between 30 minutes and a maximum of 2 hours — never longer. This is not scalping (seconds/minutes) and not swing trading (many hours/days). Size your stop-loss and take-profit distances and your exit-time guidance around this window.
-CRITICAL — target sizing: tp_pips MUST be realistically reachable within 2 hours given the asset's actual recent volatility (ATR, provided to you below). As a hard rule, tp_pips should not exceed roughly 3-4x the ATR(14) value in pips — a target far beyond that takes days to reach on this timeframe, not hours, and is a fabricated number, not a real target. If you are not confident price can realistically travel that distance within 2 hours, lower tp_pips or signal WAIT instead.
+Trading style constraint: trades on this desk are based on 30-minute analysis, with an EXPECTED HOLD TIME between 30 minutes and a maximum of 1 HOUR — never longer. This is not scalping (seconds) and not swing trading (many hours/days). Size your stop-loss and take-profit distances and your exit-time guidance around this window.
+M1 STRUCTURE RULE: the M1 report tells you the real, math-derived short-term swing structure (higher-highs/higher-lows vs lower-highs/lower-lows) forming right now. It is more current than the M30 read. If M1 structure clearly CONTRADICTS the M30-based direction you'd otherwise take, do not blindly override — instead lower your confidence significantly or signal WAIT, since a live structure conflict at entry time is a real warning sign, not noise to ignore.
+CRITICAL — target sizing: tp_pips MUST be realistically reachable within 1 hour given the asset's actual recent volatility (ATR, provided to you below). As a hard rule, tp_pips should not exceed roughly 2-3x the ATR(14) value in pips — a target far beyond that takes hours or days to reach, not one hour, and is a fabricated number, not a real target. If you are not confident price can realistically travel that distance within 1 hour, lower tp_pips or signal WAIT instead.
 Also decide a RISK PERCENTAGE — the % of the trader's account balance to risk on this single trade — scaled to your own confidence: weak/borderline setups get a low percentage (around 0.5%-1%), strong high-confluence setups can go up to 2%-3%. Never exceed 3%. On WAIT, risk percentage is 0.
 Respond ONLY in ${langLabel(lang)}, ONLY with valid JSON:
 {
   "signal": "BUY"|"SELL"|"WAIT",
   "confidence_pct": <0-100>,
   "reasons": "<one short, confident sentence — the core justification, suitable to print directly on a chart>",
-  "sl_pips": <number, stop-loss distance in pips, sane for a 30m-2h hold>,
-  "tp_pips": <number, take-profit distance in pips — realistically reachable within 2 hours given the asset's ATR, see CRITICAL rule above>,
+  "sl_pips": <number, stop-loss distance in pips, sane for a 30m-1h hold>,
+  "tp_pips": <number, take-profit distance in pips — realistically reachable within 1 hour given the asset's ATR, see CRITICAL rule above>,
   "risk_pct": <number, 0 to 3, the recommended % of account balance to risk on this trade>,
-  "exit_note": "<one sentence, in ${langLabel(lang)}, telling the trader the maximum time to wait before closing manually if TP is not hit — base this on how strong/weak the confluence is, staying within the 30min-2h window>"
+  "exit_note": "<one sentence, in ${langLabel(lang)}, telling the trader the maximum time to wait before closing manually if TP is not hit — base this on how strong/weak the confluence is, staying within the 30min-1h window>"
 }`
 
   const userText = `Asset: ${symbol}
 ATR (volatility): ${atrPips.toFixed(1)} pips
 
---- Chart Vision Report ---
+--- Chart Vision Report (M30) ---
 ${JSON.stringify(vision)}
 
---- Technical Indicator Report ---
+--- Technical Indicator Report (M30) ---
 ${JSON.stringify(technical)}
+
+--- M1 Short-Term Structure Report (live, math-derived) ---
+{"bias": "${m1.bias}", "note": "${m1.note}"}
 
 --- News & Event Risk Report ---
 ${JSON.stringify(news)}
 
-Combine all three reports and issue the final decision.`
+Combine all reports and issue the final decision. Pay special attention to the M1 STRUCTURE RULE above.`
 
   const text = await callGrok(apiKey, system, userText)
   return { parsed: extractJson(text), raw: text }
@@ -196,7 +201,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
 
   try {
-    const { symbol, lang, indicators, atrPips, chartImageBase64 } = await req.json()
+    const { symbol, lang, indicators, atrPips, chartImageBase64, m1Bias, m1Note } = await req.json()
     const GROK_KEY = Deno.env.get('GROK_KEY') ?? ''
     const safeLang = lang ?? 'en'
 
@@ -210,6 +215,7 @@ Deno.serve(async (req) => {
     // Agent 4 waits for all three, then makes the final call.
     const { parsed: decision, raw: decisionRaw } = await decisionMakerAgent(
       GROK_KEY, symbol, safeLang, Number(atrPips) || 0, vision, technical, news,
+      { bias: m1Bias ?? 'Neutral', note: m1Note ?? '' },
     )
 
     if (!decision) {

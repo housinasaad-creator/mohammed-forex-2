@@ -10,7 +10,9 @@ enum AnalysisState { idle, loading, done, error }
 class DashboardProvider extends ChangeNotifier {
   // ── State ──────────────────────────────────────────────────────────────────
 
-  Asset _selectedAsset = AssetCatalogue.forexMajor.first;
+  // Locked to EUR/USD only — focusing on a single pair gives a clean,
+  // uncluttered read on whether the system has real edge before expanding.
+  final Asset _selectedAsset = AssetCatalogue.forexMajor.first;
   final Timeframe _selectedTimeframe = Timeframe.m30;
   AnalysisState _state = AnalysisState.idle;
   AnalysisResult? _result;
@@ -40,14 +42,6 @@ class DashboardProvider extends ChangeNotifier {
   bool get isLoading          => _state == AnalysisState.loading;
 
   // ── Actions ────────────────────────────────────────────────────────────────
-
-  void selectAsset(Asset asset) {
-    if (_selectedAsset.symbol == asset.symbol) return;
-    _selectedAsset = asset;
-    _result = null;
-    _state = AnalysisState.idle;
-    notifyListeners();
-  }
 
   Future<void> runAnalysis({String lang = 'en'}) async {
     if (_state == AnalysisState.loading) return;

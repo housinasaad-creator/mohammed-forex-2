@@ -43,7 +43,7 @@ class AnalysisService {
     return '${two(t.hour)}:${two(t.minute)}';
   }
 
-  static String _hardExitTime() => _fmtTurkeyTime(DateTime.now().toUtc().add(const Duration(hours: 2)));
+  static String _hardExitTime() => _fmtTurkeyTime(DateTime.now().toUtc().add(const Duration(hours: 1)));
 
   // ── Market hours ───────────────────────────────────────────────────────────
 
@@ -308,6 +308,7 @@ class AnalysisService {
         tracked('rsi',         '$base/rsi?symbol=$symbol&interval=$interval&time_period=14&outputsize=1&apikey=$key'),
         tracked('macd',        '$base/macd?symbol=$symbol&interval=$interval&fast_period=12&slow_period=26&signal_period=9&outputsize=1&apikey=$key'),
         tracked('ema',         '$base/ema?symbol=$symbol&interval=1h&time_period=50&outputsize=2&apikey=$key'),
+        tracked('m1',          '$base/time_series?symbol=$symbol&interval=1min&outputsize=40&apikey=$key'),
       ]);
 
       final tsJson = json.decode(results[0].body) as Map<String, dynamic>;
@@ -373,6 +374,29 @@ class AnalysisService {
                : nh.length == 1 ? 'weakSupply'
                : 'neutral';
 
+      // ── M1 short-term structure (deterministic, no AI guessing) ────────────
+      // Real swing-high/swing-low math on live 1-minute candles — catches a
+      // reversal (e.g. a double bottom + breakout) starting to form before
+      // it's visible on the M30 chart, without the noise/unreliability of
+      // asking a vision model to "read" a much noisier M1 image.
+      var m1Bias = 'Neutral';
+      var m1Note = 'M1 data unavailable';
+      try {
+        final m1Json = json.decode(results[4].body) as Map<String, dynamic>;
+        if (m1Json['status'] == 'ok' && m1Json['values'] != null) {
+          final m1Raw = (m1Json['values'] as List).reversed.toList();
+          final m1Highs = m1Raw.map((v) => double.tryParse(v['high'].toString()) ?? 0.0).toList();
+          final m1Lows  = m1Raw.map((v) => double.tryParse(v['low'].toString())  ?? 0.0).toList();
+          final m1Closes = m1Raw.map((v) => double.tryParse(v['close'].toString()) ?? 0.0).toList();
+          final structure = _classifyM1Structure(m1Closes, m1Highs, m1Lows);
+          m1Bias = structure['bias']!;
+          m1Note = structure['note']!;
+        }
+      } catch (_) {
+        // M1 structure is a confirmation signal, not a hard dependency —
+        // fall back to Neutral rather than failing the whole analysis.
+      }
+
       return {
         'rsi': rsi, 'macd_value': macdValue,
         'macd_signal': macdSignal, 'macd_histogram': macdHisto,
@@ -380,11 +404,64 @@ class AnalysisService {
         'candles': candles,
         'pivot_highs': ph.take(5).toList(),
         'pivot_lows':  pl.take(5).toList(),
+        'm1_bias': m1Bias,
+        'm1_note': m1Note,
       };
     } catch (e, st) {
       debugPrint('[AnalysisService] _fetchRealIndicators exception: $e\n$st');
       return null;
     }
+  }
+
+  // ── M1 swing-structure classifier (pure math, no AI) ──────────────────────
+  static Map<String, String> _classifyM1Structure(
+      List<double> closes, List<double> highs, List<double> lows) {
+    final n = closes.length;
+    if (n < 10) return {'bias': 'Neutral', 'note': 'Insufficient M1 data'};
+
+    final phIdx = <int>[], plIdx = <int>[];
+    for (int i = 2; i < n - 2; i++) {
+      if (highs[i] > highs[i-1] && highs[i] > highs[i-2] &&
+          highs[i] > highs[i+1] && highs[i] > highs[i+2]) phIdx.add(i);
+      if (lows[i] < lows[i-1] && lows[i] < lows[i-2] &&
+          lows[i] < lows[i+1] && lows[i] < lows[i+2]) plIdx.add(i);
+    }
+
+    final price = closes.last;
+
+    if (plIdx.length >= 2) {
+      final i1 = plIdx[plIdx.length - 2], i2 = plIdx[plIdx.length - 1];
+      final l1 = lows[i1], l2 = lows[i2];
+      final tol = l1 * 0.0006;
+      if ((l1 - l2).abs() < tol) {
+        final betweenHigh = highs.sublist(i1, i2 + 1).reduce(math.max);
+        if (price > betweenHigh) {
+          return {'bias': 'Bullish', 'note': 'Double-bottom confirmed with breakout above the interim high — fresh short-term uptrend forming'};
+        }
+        return {'bias': 'Neutral', 'note': 'Double-bottom forming on M1, not yet confirmed by a breakout'};
+      }
+      if (l2 > l1) {
+        return {'bias': 'Bullish', 'note': 'Higher low forming on M1 — short-term structure shifting up'};
+      }
+    }
+
+    if (phIdx.length >= 2) {
+      final i1 = phIdx[phIdx.length - 2], i2 = phIdx[phIdx.length - 1];
+      final h1 = highs[i1], h2 = highs[i2];
+      final tol = h1 * 0.0006;
+      if ((h1 - h2).abs() < tol) {
+        final betweenLow = lows.sublist(i1, i2 + 1).reduce(math.min);
+        if (price < betweenLow) {
+          return {'bias': 'Bearish', 'note': 'Double-top confirmed with breakdown below the interim low — fresh short-term downtrend forming'};
+        }
+        return {'bias': 'Neutral', 'note': 'Double-top forming on M1, not yet confirmed by a breakdown'};
+      }
+      if (h2 < h1) {
+        return {'bias': 'Bearish', 'note': 'Lower high forming on M1 — short-term structure shifting down'};
+      }
+    }
+
+    return {'bias': 'Neutral', 'note': 'No clear short-term structure shift on M1'};
   }
 
   static double _roundPrice(double price, Asset asset) {
@@ -497,6 +574,8 @@ class AnalysisService {
       indicatorSnapshot: indicatorSnapshot,
       atrPips: atrPips,
       plainImageBytes: plainImageBytes,
+      m1Bias: realData['m1_bias'] as String? ?? 'Neutral',
+      m1Note: realData['m1_note'] as String? ?? '',
     );
 
     if (decision == null) return _buildDataErrorResult(asset, s: s);
@@ -619,6 +698,8 @@ class AnalysisService {
     required Map<String, dynamic> indicatorSnapshot,
     required double atrPips,
     required List<int> plainImageBytes,
+    required String m1Bias,
+    required String m1Note,
   }) async {
     try {
       const url = 'https://aixpkthloeafwakiijws.supabase.co/functions/v1/multi-agent-analysis';
@@ -635,6 +716,8 @@ class AnalysisService {
           'indicators': indicatorSnapshot,
           'atrPips': atrPips,
           'chartImageBase64': base64Encode(plainImageBytes),
+          'm1Bias': m1Bias,
+          'm1Note': m1Note,
         }),
       ).timeout(const Duration(seconds: 120));
 

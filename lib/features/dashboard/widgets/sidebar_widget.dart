@@ -2,21 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/localization/locale_provider.dart';
-import '../models/asset_model.dart';
 import '../providers/dashboard_provider.dart';
 
-class SidebarWidget extends StatefulWidget {
+// Single-pair focus mode: the asset picker is gone on purpose. Testing one
+// pair (EUR/USD) at a time gives a clean read on whether the system has real
+// edge, without the noise of switching between assets with very different
+// volatility profiles.
+class SidebarWidget extends StatelessWidget {
   const SidebarWidget({super.key});
-
-  @override
-  State<SidebarWidget> createState() => _SidebarWidgetState();
-}
-
-class _SidebarWidgetState extends State<SidebarWidget> {
-  final Set<AssetCategory> _expanded = {
-    AssetCategory.forexMajor,
-  };
 
   @override
   Widget build(BuildContext context) {
@@ -31,18 +24,9 @@ class _SidebarWidgetState extends State<SidebarWidget> {
           _buildLogo(),
           const Divider(color: AppColors.border, height: 1),
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Column(
-                children: [
-                  _buildCategory(AssetCategory.forexMajor,  AssetCatalogue.forexMajor),
-                  _buildCategory(AssetCategory.forexMinor,  AssetCatalogue.forexMinor),
-                  _buildCategory(AssetCategory.forexExotic, AssetCatalogue.forexExotic),
-                  _buildCategory(AssetCategory.metals,      AssetCatalogue.metals),
-                  _buildCategory(AssetCategory.energy,      AssetCatalogue.energy),
-                  _buildCategory(AssetCategory.commodities, AssetCatalogue.commodities),
-                ],
-              ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: _buildFocusPanel(context),
             ),
           ),
           _buildFooter(),
@@ -91,33 +75,67 @@ class _SidebarWidgetState extends State<SidebarWidget> {
     );
   }
 
-  // ── Category Section ───────────────────────────────────────────────────────
+  // ── Locked single-asset panel ───────────────────────────────────────────────
 
-  Widget _buildCategory(AssetCategory category, List<Asset> assets) {
-    final isOpen = _expanded.contains(category);
+  Widget _buildFocusPanel(BuildContext context) {
+    final asset = context.watch<DashboardProvider>().selectedAsset;
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _CategoryHeader(
-          category: category,
-          isExpanded: isOpen,
-          onTap: () => setState(() {
-            if (isOpen) {
-              _expanded.remove(category);
-            } else {
-              _expanded.add(category);
-            }
-          }),
-        ),
-        AnimatedCrossFade(
-          duration: const Duration(milliseconds: 220),
-          crossFadeState:
-              isOpen ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-          firstChild: Column(
-            children: assets
-                .map((a) => _AssetTile(asset: a))
-                .toList(),
+        Text(
+          'FOCUS MODE',
+          style: GoogleFonts.inter(
+            fontSize: 10.5,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textMuted,
+            letterSpacing: 1.4,
           ),
-          secondChild: const SizedBox.shrink(),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.gold.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.borderGold, width: 1),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: asset.logoColor.withOpacity(0.15),
+                  border: Border.all(color: AppColors.gold, width: 1.5),
+                ),
+                child: Center(
+                  child: Text(
+                    asset.abbreviation,
+                    style: GoogleFonts.inter(fontSize: 10.5, fontWeight: FontWeight.w700, color: AppColors.gold),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(asset.symbol,
+                        style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.gold)),
+                    Text(asset.displayName,
+                        style: GoogleFonts.inter(fontSize: 10, color: AppColors.textMuted),
+                        overflow: TextOverflow.ellipsis),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        Text(
+          'الأداة مخصصة حالياً لتحليل EUR/USD فقط — لتقييم نظيف ودقيق لمدى نجاحها قبل توسيعها لأزواج أخرى.',
+          style: GoogleFonts.inter(fontSize: 11, color: AppColors.textMuted, height: 1.6),
         ),
       ],
     );
@@ -137,7 +155,7 @@ class _SidebarWidgetState extends State<SidebarWidget> {
               size: 14, color: AppColors.textMuted),
           const SizedBox(width: 8),
           Text(
-            'v1.0.0 · Portfolio Build',
+            'v2.0.0 · Multi-Agent Engine',
             style: GoogleFonts.inter(
               fontSize: 11,
               color: AppColors.textMuted,
@@ -183,189 +201,6 @@ class _GoldCircleLogo extends StatelessWidget {
             fontWeight: FontWeight.w900,
             color: AppColors.background,
             letterSpacing: -0.5,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CategoryHeader extends StatefulWidget {
-  const _CategoryHeader({
-    required this.category,
-    required this.isExpanded,
-    required this.onTap,
-  });
-
-  final AssetCategory category;
-  final bool isExpanded;
-  final VoidCallback onTap;
-
-  @override
-  State<_CategoryHeader> createState() => _CategoryHeaderState();
-}
-
-class _CategoryHeaderState extends State<_CategoryHeader> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            color: _hovered
-                ? AppColors.surfaceHigh
-                : Colors.transparent,
-          ),
-          child: Row(
-            children: [
-              Icon(
-                widget.category.icon,
-                size: 16,
-                color: widget.category.accentColor,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  context.watch<LocaleProvider>().s.categoryLabel(widget.category),
-                  style: GoogleFonts.inter(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-              ),
-              AnimatedRotation(
-                turns: widget.isExpanded ? 0 : -0.25,
-                duration: const Duration(milliseconds: 220),
-                child: Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  size: 18,
-                  color: AppColors.textMuted,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _AssetTile extends StatefulWidget {
-  const _AssetTile({required this.asset});
-  final Asset asset;
-
-  @override
-  State<_AssetTile> createState() => _AssetTileState();
-}
-
-class _AssetTileState extends State<_AssetTile> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final provider = context.watch<DashboardProvider>();
-    final isSelected =
-        provider.selectedAsset.symbol == widget.asset.symbol;
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: () => provider.selectAsset(widget.asset),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            color: isSelected
-                ? AppColors.gold.withOpacity(0.12)
-                : _hovered
-                    ? AppColors.surfaceHigh
-                    : Colors.transparent,
-            border: isSelected
-                ? Border.all(color: AppColors.borderGold, width: 1)
-                : null,
-          ),
-          child: Row(
-            children: [
-              // Circular Logo Badge
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: widget.asset.logoColor.withOpacity(0.15),
-                  border: Border.all(
-                    color: isSelected
-                        ? AppColors.gold
-                        : widget.asset.logoColor.withOpacity(0.5),
-                    width: isSelected ? 1.5 : 1,
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    widget.asset.abbreviation,
-                    style: GoogleFonts.inter(
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w700,
-                      color: isSelected
-                          ? AppColors.gold
-                          : widget.asset.logoColor,
-                      letterSpacing: -0.3,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.asset.symbol,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: isSelected
-                            ? AppColors.gold
-                            : AppColors.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      widget.asset.displayName,
-                      style: GoogleFonts.inter(
-                        fontSize: 10,
-                        color: AppColors.textMuted,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              if (isSelected)
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.gold,
-                  ),
-                ),
-            ],
           ),
         ),
       ),
