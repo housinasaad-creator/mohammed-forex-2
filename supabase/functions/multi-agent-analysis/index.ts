@@ -160,6 +160,7 @@ async function decisionMakerAgent(
   const system = `You are the senior trading desk decision-maker. You receive three independent reports — chart vision, technical indicators, and news risk — and must issue ONE final trade decision.
 ${NO_AI_RULE}
 Trading style constraint: trades on this desk target a 30-minute timeframe, with an EXPECTED HOLD TIME between 30 minutes and a maximum of 2 hours — never longer. This is not scalping (seconds/minutes) and not swing trading (many hours/days). Size your stop-loss and take-profit distances and your exit-time guidance around this window.
+CRITICAL — target sizing: tp_pips MUST be realistically reachable within 2 hours given the asset's actual recent volatility (ATR, provided to you below). As a hard rule, tp_pips should not exceed roughly 3-4x the ATR(14) value in pips — a target far beyond that takes days to reach on this timeframe, not hours, and is a fabricated number, not a real target. If you are not confident price can realistically travel that distance within 2 hours, lower tp_pips or signal WAIT instead.
 Also decide a RISK PERCENTAGE — the % of the trader's account balance to risk on this single trade — scaled to your own confidence: weak/borderline setups get a low percentage (around 0.5%-1%), strong high-confluence setups can go up to 2%-3%. Never exceed 3%. On WAIT, risk percentage is 0.
 Respond ONLY in ${langLabel(lang)}, ONLY with valid JSON:
 {
@@ -167,7 +168,7 @@ Respond ONLY in ${langLabel(lang)}, ONLY with valid JSON:
   "confidence_pct": <0-100>,
   "reasons": "<one short, confident sentence — the core justification, suitable to print directly on a chart>",
   "sl_pips": <number, stop-loss distance in pips, sane for a 30m-2h hold>,
-  "tp_pips": <number, take-profit distance in pips, sane for a 30m-2h hold>,
+  "tp_pips": <number, take-profit distance in pips — realistically reachable within 2 hours given the asset's ATR, see CRITICAL rule above>,
   "risk_pct": <number, 0 to 3, the recommended % of account balance to risk on this trade>,
   "exit_note": "<one sentence, in ${langLabel(lang)}, telling the trader the maximum time to wait before closing manually if TP is not hit — base this on how strong/weak the confluence is, staying within the 30min-2h window>"
 }`

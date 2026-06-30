@@ -510,25 +510,30 @@ class AnalysisService {
     final reasons = (decision['reasons'] as String?) ?? '';
     final exitNote = (decision['exit_note'] as String?) ?? '';
     final slPips = ((decision['sl_pips'] as num?) ?? 0).toDouble().clamp(2.0, 400.0);
-    final tpPips = ((decision['tp_pips'] as num?) ?? 0).toDouble().clamp(2.0, 800.0);
+    // Sanity cap on the target — a 30min-2h hold realistically covers a few
+    // ATR(14) ranges, not 50+. Without this, a model hallucinating a far
+    // target produces a TP that would genuinely take days to reach, exactly
+    // the "impossible target" complaint this guards against.
+    final tpCap = math.max(atrPips * 5, 15.0);
+    final tpPips = ((decision['tp_pips'] as num?) ?? 0).toDouble().clamp(2.0, tpCap);
     final riskPct = ((decision['risk_pct'] as num?) ?? 0).toDouble().clamp(0.0, 3.0);
 
     // Spread Buffer — push SL an extra 30 pips further away from entry so a
     // sudden spread widening (news spike, session open) doesn't tag the stop
-    // before price actually reverses. TP is scaled by the SAME factor so the
-    // AI's intended risk:reward ratio is preserved — widening only the SL
-    // would otherwise silently turn a good 1:1.67 setup into a losing-side
-    // 1:0.56 one.
+    // before price actually reverses. TP stays EXACTLY what the model judged
+    // realistic for the 30min-2h hold — it must never be inflated just to
+    // make the on-paper R:R look better, because that produces unreachable
+    // targets (a 25-pip realistic target turned into a 75-pip one). The
+    // buffer is dead safety margin, not part of the genuine reward case.
     final bufferedSlPips = slPips + _spreadBufferPips;
-    final bufferedTpPips = tpPips * (bufferedSlPips / slPips);
 
     double sl = entry, tp = entry;
     if (signal == SignalType.buy) {
       sl = entry - bufferedSlPips * asset.pipValue;
-      tp = entry + bufferedTpPips * asset.pipValue;
+      tp = entry + tpPips * asset.pipValue;
     } else if (signal == SignalType.sell) {
       sl = entry + bufferedSlPips * asset.pipValue;
-      tp = entry - bufferedTpPips * asset.pipValue;
+      tp = entry - tpPips * asset.pipValue;
     }
     final rrr = signal == SignalType.wait || (entry - sl).abs() == 0
         ? 0.0
