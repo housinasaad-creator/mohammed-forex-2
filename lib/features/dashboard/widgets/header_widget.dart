@@ -131,30 +131,6 @@ class _HeaderWidgetState extends State<HeaderWidget>
                 ],
               ),
             ),
-            // Row 2: Timeframe selector (scrollable)
-            Container(
-              height: 36,
-              decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: AppColors.border, width: 1)),
-              ),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-                child: Row(
-                  children: [
-                    Text(s.timeframeLabel,
-                        style: GoogleFonts.inter(
-                            fontSize: 10, color: AppColors.textMuted)),
-                    const SizedBox(width: 6),
-                    ...Timeframe.values.map((tf) => _TimeframeChip(
-                          tf: tf,
-                          isSelected: provider.selectedTimeframe == tf,
-                          onTap: () => provider.selectTimeframe(tf),
-                        )),
-                  ],
-                ),
-              ),
-            ),
           ],
         ),
       );
@@ -177,8 +153,6 @@ class _HeaderWidgetState extends State<HeaderWidget>
           _buildActivePair(provider),
           SizedBox(width: compact ? 10 : 20),
           _buildMt5Status(provider, s),
-          SizedBox(width: compact ? 10 : 20),
-          _buildTimeframeSelector(provider, s),
           SizedBox(width: compact ? 8 : 16),
           _LangSwitcher(current: lp.lang, onSelect: lp.setLang),
           if (widget.showBackButton) ...[
@@ -343,104 +317,12 @@ class _HeaderWidgetState extends State<HeaderWidget>
     );
   }
 
-  // ── Timeframe Selector ─────────────────────────────────────────────────────
-
-  Widget _buildTimeframeSelector(DashboardProvider provider, s) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          s.timeframeLabel,
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            color: AppColors.textMuted,
-            letterSpacing: 0.3,
-          ),
-        ),
-        const SizedBox(width: 8),
-        ...Timeframe.values.map(
-          (tf) => _TimeframeChip(
-            tf: tf,
-            isSelected: provider.selectedTimeframe == tf,
-            onTap: () => provider.selectTimeframe(tf),
-          ),
-        ),
-      ],
-    );
-  }
-
   void _showAssetPicker(BuildContext context, DashboardProvider provider) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _MobileAssetSheet(provider: provider),
-    );
-  }
-}
-
-// ── Timeframe Chip ─────────────────────────────────────────────────────────────
-
-class _TimeframeChip extends StatefulWidget {
-  const _TimeframeChip({
-    required this.tf,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final Timeframe tf;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  State<_TimeframeChip> createState() => _TimeframeChipState();
-}
-
-class _TimeframeChipState extends State<_TimeframeChip> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          margin: const EdgeInsets.only(left: 4),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(7),
-            color: widget.isSelected
-                ? AppColors.gold
-                : _hovered
-                    ? AppColors.surfaceHigh
-                    : AppColors.surface,
-            boxShadow: widget.isSelected
-                ? [
-                    BoxShadow(
-                      color: AppColors.gold.withOpacity(0.3),
-                      blurRadius: 10,
-                      spreadRadius: 1,
-                    )
-                  ]
-                : [],
-          ),
-          child: Text(
-            widget.tf.label,
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: widget.isSelected
-                  ? AppColors.background
-                  : AppColors.textSecondary,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

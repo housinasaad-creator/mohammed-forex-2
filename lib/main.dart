@@ -6,7 +6,7 @@ import 'core/constants/app_colors.dart';
 import 'core/localization/locale_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'features/dashboard/providers/dashboard_provider.dart';
-import 'features/home/screens/home_screen.dart';
+import 'features/dashboard/screens/dashboard_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,7 +38,7 @@ class MohammedForexApp extends StatelessWidget {
             textDirection: TextDirection.ltr,
             child: child!,
           ),
-          home: const HomeScreen(),
+          home: const DashboardScreen(),
         ),
       ),
     );

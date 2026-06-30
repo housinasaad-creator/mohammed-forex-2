@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import 'candle_model.dart';
@@ -117,6 +118,16 @@ class AnalysisResult {
   final String smcLiqSweep;         // e.g. 'Bullish Sweep @ 1.0800'
   final String tradeNote;           // AI-generated or rule-based trade management note
 
+  // ── Multi-Agent Output (v2) ────────────────────────────────────────────────
+  final String aiReasons;           // Decision_Maker_Agent's short justification (printed on chart)
+  final String exitNote;            // Decision_Maker_Agent's dynamic exit-time guidance
+  final double riskPercent;         // Decision_Maker_Agent's recommended % of balance to risk (0-3)
+  final Uint8List? chartImageBytes; // Final composed chart PNG (candles + entry/SL/TP + overlay + watermark)
+
+  // ── Risk & Time Safety Layer ───────────────────────────────────────────────
+  final bool lowLiquidityWarning;   // true during 00:00-09:00 Turkey time (thin Asian session)
+  final String hardExitTime;        // "HH:mm" Turkey time — now + 2h, deterministic safety deadline
+
   const AnalysisResult({
     required this.signal,
     required this.accuracy,
@@ -152,5 +163,11 @@ class AnalysisResult {
     this.smcBos = '',
     this.smcLiqSweep = '',
     this.tradeNote = '',
+    this.aiReasons = '',
+    this.exitNote = '',
+    this.riskPercent = 0.0,
+    this.chartImageBytes,
+    this.lowLiquidityWarning = false,
+    this.hardExitTime = '',
   });
 }

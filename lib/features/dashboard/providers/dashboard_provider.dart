@@ -11,7 +11,7 @@ class DashboardProvider extends ChangeNotifier {
   // ── State ──────────────────────────────────────────────────────────────────
 
   Asset _selectedAsset = AssetCatalogue.forexMajor.first;
-  Timeframe _selectedTimeframe = Timeframe.m15;
+  final Timeframe _selectedTimeframe = Timeframe.m30;
   AnalysisState _state = AnalysisState.idle;
   AnalysisResult? _result;
   String _errorMessage = '';
@@ -49,14 +49,6 @@ class DashboardProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void selectTimeframe(Timeframe tf) {
-    if (_selectedTimeframe == tf) return;
-    _selectedTimeframe = tf;
-    _result = null;
-    _state = AnalysisState.idle;
-    notifyListeners();
-  }
-
   Future<void> runAnalysis({String lang = 'en'}) async {
     if (_state == AnalysisState.loading) return;
 
@@ -78,7 +70,8 @@ class DashboardProvider extends ChangeNotifier {
       );
       _result = result;
       _state = AnalysisState.done;
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('[DashboardProvider] runAnalysis exception: $e\n$st');
       _errorMessage = 'Analysis failed: ${e.toString()}';
       _state = AnalysisState.error;
     }
