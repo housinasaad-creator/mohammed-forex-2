@@ -22141,15 +22141,15 @@ c0=A.ce(h.i(b5,"exit_note"))
 if(c0==null)c0=""
 b7=A.rT(h.i(b5,"sl_pips"))
 c1=B.d.co(b7==null?0:b7,2,400)
+c2=Math.max(a1*5,15)
 b7=A.rT(h.i(b5,"tp_pips"))
-c2=B.d.co(b7==null?0:b7,2,800)
+c3=B.d.co(b7==null?0:b7,2,c2)
 h=A.rT(h.i(b5,"risk_pct"))
-c3=B.d.co(h==null?0:h,0,3)
-c4=c1+30
-c5=c2*(c4/c1)
-if(f===B.wp){c6=a9-c4*p
-c7=a9+c5*p}else if(f===B.wq){c6=a9+c4*p
-c7=a9-c5*p}else{c7=a9
+c4=B.d.co(h==null?0:h,0,3)
+c5=c1+30
+if(f===B.wp){c6=a9-c5*p
+c7=a9+c3*p}else if(f===B.wq){c6=a9+c5*p
+c7=a9-c3*p}else{c7=a9
 c6=c7}p=f===B.bN
 c8=p||Math.abs(a9-c6)===0?0:Math.abs(c7-a9)/Math.abs(a9-c6)
 c9=A.agS(a9,e3)
@@ -22160,7 +22160,7 @@ d3=A.atX(new A.dt(Date.now(),0,!1).qb().nU(72e8))
 h=p?null:c9
 b7=p?null:d0
 d4=p?null:d1
-p=p?null:c3
+p=p?null:c4
 s=6
 return A.E(A.tY(e,b8,h,c0,d3,b4,d2,c,b,b9,p,d,A.ang(f),b7,d4),$async$oH)
 case 6:d5=e8
@@ -22186,7 +22186,7 @@ e0=a7.i(0,"bos")
 e0.toString
 e1=a7.i(0,"liqSweep")
 e1.toString
-q=A.Su(b8,b9,b9,h,a0,d7,d6,b4,a,e,d5,b9,B.ir,c9,c0,d3,k,d2,l,m,n,c,b,c3,d4,b7,a6,a5,d,b3,f,e0,d9,e1,d8,d0,d1,p)
+q=A.Su(b8,b9,b9,h,a0,d7,d6,b4,a,e,d5,b9,B.ir,c9,c0,d3,k,d2,l,m,n,c,b,c4,d4,b7,a6,a5,d,b3,f,e0,d9,e1,d8,d0,d1,p)
 s=1
 break
 case 1:return A.K(q,r)}})
