@@ -1,6 +1,4 @@
-﻿flutter_*
-.dart_tool
+﻿.dart_tool
 build
 .pub-cache
-.pub
 *.log
