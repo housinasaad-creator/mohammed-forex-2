@@ -22354,7 +22354,7 @@ k=A.er("https://aixpkthloeafwakiijws.supabase.co/functions/v1/multi-agent-analys
 j=t.N
 i=A.ap(["Authorization",u.s,"Content-Type","application/json"],j,j)
 s=7
-return A.H(A.aF8(k,B.aD.jK(A.ap(["symbol",a.a,"lang",d,"indicators",c,"atrPips",b,"chartImageBase64",B.kf.gAw().cc(a0),"m1Bias",e,"m1Note",f],j,t.K)),i).nl(0,B.CH),$async$Tc)
+return A.H(A.aF8(k,B.aD.jK(A.ap(["symbol",a.a,"lang",d,"indicators",c,"atrPips",b,"chartImageBase64",B.kf.gAw().cc(a0),"m1Bias",e,"m1Note",f,"entryInstruction","CRITICAL TRADING RULE \u2014 READ BEFORE DECIDING: The trader enters the market IMMEDIATELY at the current live price the moment you give a BUY or SELL signal. There is NO waiting for price to reach a specific level. Your signal means: enter RIGHT NOW at the current market price. Base your BUY/SELL/WAIT decision, confidence, and reasoning on this assumption. The SL and TP will be calculated automatically from this current entry price. Do NOT suggest waiting for a better entry \u2014 the entry IS the current price."],j,t.K)),i).nl(0,B.CH),$async$Tc)
 case 7:n=a2
 if(n.b===200){k=n
 k=t.a.a(B.aD.bH(0,A.md(A.m9(k.e)).bH(0,k.w)))
