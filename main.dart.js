@@ -22347,15 +22347,18 @@ break
 case 1:return A.L(q,r)}})
 return A.M($async$oS,r)},
 Tc(a,b,c,d,e,f,g){return A.auV(a,b,c,d,e,f,g)},
-auV(a,b,c,d,e,f,a0){var s=0,r=A.N(t.nA),q,p=2,o=[],n,m,l,k,j,i,h,g
-var $async$Tc=A.O(function(a1,a2){if(a1===1){o.push(a2)
+auV(a,b,c,d,a0,a1,a2){var s=0,r=A.N(t.nA),q,p=2,o=[],n,m,l,k,j,i,h,g,f,e
+var $async$Tc=A.O(function(a3,a4){if(a3===1){o.push(a4)
 s=p}for(;;)switch(s){case 0:p=4
 k=A.er("https://aixpkthloeafwakiijws.supabase.co/functions/v1/multi-agent-analysis",0,null)
 j=t.N
 i=A.ap(["Authorization",u.s,"Content-Type","application/json"],j,j)
+h=B.kf.gAw().cc(a2)
+if(d==="ar")g='MANDATORY: Write the entire "reasons" field in ARABIC language only. Do NOT use any English words in the reasons. The user reads Arabic. Write naturally in Arabic as if explaining to an Arabic-speaking trader.'
+else g=d==="tr"?'MANDATORY: Write the entire "reasons" field in TURKISH language only.':'Write the "reasons" field in English.'
 s=7
-return A.H(A.aF8(k,B.aD.jK(A.ap(["symbol",a.a,"lang",d,"indicators",c,"atrPips",b,"chartImageBase64",B.kf.gAw().cc(a0),"m1Bias",e,"m1Note",f,"entryInstruction","CRITICAL TRADING RULE \u2014 READ BEFORE DECIDING: The trader enters the market IMMEDIATELY at the current live price the moment you give a BUY or SELL signal. There is NO waiting for price to reach a specific level. Your signal means: enter RIGHT NOW at the current market price. Base your BUY/SELL/WAIT decision, confidence, and reasoning on this assumption. The SL and TP will be calculated automatically from this current entry price. Do NOT suggest waiting for a better entry \u2014 the entry IS the current price."],j,t.K)),i).nl(0,B.CH),$async$Tc)
-case 7:n=a2
+return A.H(A.aF8(k,B.aD.jK(A.ap(["symbol",a.a,"lang",d,"indicators",c,"atrPips",b,"chartImageBase64",h,"m1Bias",a0,"m1Note",a1,"entryInstruction","CRITICAL TRADING RULE \u2014 READ BEFORE DECIDING: The trader enters the market IMMEDIATELY at the current live price the moment you give a BUY or SELL signal. There is NO waiting for price to reach a specific level. Your signal means: enter RIGHT NOW at the current market price. Base your BUY/SELL/WAIT decision, confidence, and reasoning on this assumption. The SL and TP will be calculated automatically from this current entry price. Do NOT suggest waiting for a better entry \u2014 the entry IS the current price.","languageInstruction",g],j,t.K)),i).nl(0,B.CH),$async$Tc)
+case 7:n=a4
 if(n.b===200){k=n
 k=t.a.a(B.aD.bH(0,A.md(A.m9(k.e)).bH(0,k.w)))
 q=k
@@ -22366,9 +22369,9 @@ p=2
 s=6
 break
 case 4:p=3
-g=o.pop()
-m=A.a9(g)
-l=A.an(g)
+e=o.pop()
+m=A.a9(e)
+l=A.an(e)
 A.tm().$1("[AnalysisService] multi-agent-analysis exception: "+A.j(m)+"\n"+A.j(l))
 s=6
 break
